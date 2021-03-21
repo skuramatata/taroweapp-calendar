@@ -1,5 +1,6 @@
 export default {
   pages: [
+    'pages/login/login',
     'pages/index/index'
   ],
   window: {

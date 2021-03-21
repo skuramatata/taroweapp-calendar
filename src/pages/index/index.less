@@ -36,18 +36,22 @@
 .calendar-head>view {
   color: #292847;
 }
+.calendar-date{
+  height: 48px;
+}
 
 .calendar-selected>.calendar-date {
-  height: 96px;
-  width: 96px;
+  height: 48px;
+  width: 48px;
   display: flex;
   justify-content: center;
   align-items: center;
+  right: -20px;
 }
 
-.calendar-selected>.calendar-mark {
-  top: 2.2rem !important;
-}
+// .calendar-selected>.calendar-mark {
+//   top: 4rem !important;
+// }
 
 .header__flex-item {
   color: #292847;
@@ -89,6 +93,24 @@
   .at-card{
     margin-bottom: 20px;
   }
+}
+
+.not-this-month .calendar-date{
+  color: #aaaaaa !important;
+}
+
+.calendar-page > view{
+  height: 7rem;
+}
+
+.calendarTags{
+  margin-top: 20px;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-around;
+  // .at-tag{
+  //   margin-right: 10px;
+  // }
 }
 
 
