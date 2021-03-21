@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Taro, { checkIsSupportFacialRecognition, FunctionComponent } from '@tarojs/taro';
-import { AtTabs, AtCard } from "taro-ui"
+import { AtTabs, AtCard, AtTag } from "taro-ui"
 import { View, Text } from '@tarojs/components'
 import Calendar from 'taro-calendar-customizable';
+import api from "../../services/api";
 import './index.less'
-import dayjs from 'dayjs'
 import Datetypeswiper from '../../components/datetypeswiper'
+import dayjs from 'dayjs'
 var weekOfYear = require('dayjs/plugin/weekOfYear')
 dayjs.extend(weekOfYear)
 
-
+const activeList = [{ title: "全部", value: "all" }, { title: "请假", value: "leaves" }, { title: "出行", value: "outs" }, { title: "考勤", value: "attendanceDailys" }, { title: "加班", value: "extra" }]
 const Index: FunctionComponent = () => {
   const [isShow, setIsShow] = useState(true)
   const [dateType, setDateType] = useState("month")
@@ -19,17 +20,11 @@ const Index: FunctionComponent = () => {
   const [day, setDay] = useState("")
   const [current, setCurrent] = useState(0)
   const [selectday, setSelectDay] = useState(dayjs())
-  const [dateTypeList, setDateTypeList] = useState([{ title: "月", value: "month" }, { title: "周", value: "week" }, { title: "日", value: "day" }])
-  const [marks, setMarks] = useState([
-    { value: '2020-12-11', color: 'red', markSize: '9px' },
-    { value: '2020-12-12', color: 'pink', markSize: '9px' },
-    { value: '2020-12-13', color: 'gray', markSize: '9px' },
-    { value: '2020-12-14', color: 'yellow', markSize: '9px' },
-    { value: '2020-12-15', color: 'darkblue', markSize: '9px' },
-    { value: '2020-12-16', color: 'pink', markSize: '9px' },
-    { value: '2020-12-17', color: 'green', markSize: '9px' }
-  ])
+  const [dateTypeList, setDateTypeList] = useState([{ title: "月", value: "month" }, { title: "周", value: "week" }, { title: "今日", value: "day" }])
+  const [marks, setMarks] = useState([])
   const [calendarList, setCalendarList] = useState([])
+  const [isactive, setisactive] = useState("all")
+  const [list, setList] = useState([])
 
   useEffect(() => {
     setYear(dayjs().format("YYYY"))
@@ -41,13 +36,21 @@ const Index: FunctionComponent = () => {
   useEffect(() => {
     if (dateType == "month")
       changeDate(selectday)
+    if (dateType == "day")
+      changeDate(dayjs())
+
     return () => {
     }
   }, [dateType])
 
-  const showDate = () => {
-    setIsShow(!isShow)
-  }
+  useEffect(() => {
+    if (isactive != "all")
+      setCalendarList(list.filter(p => p.orderType == isactive))
+    else
+      setCalendarList(list)
+    return () => {
+    }
+  }, [isactive])
 
   const getdateInfo = (item) => {
     changeDate(item)
@@ -67,6 +70,7 @@ const Index: FunctionComponent = () => {
       setMonth(item.format("MM"))
       setDay(item.format("DD"))
       setWeek(item.week())
+      getinfoList(item)
     }
   }
 
@@ -80,7 +84,6 @@ const Index: FunctionComponent = () => {
     const day = dayjs(value)
     setSelectDay(day)
     changeDate(day)
-    checkcalendar(item)
   }
 
   const onMonthChange = (item) => {
@@ -89,22 +92,78 @@ const Index: FunctionComponent = () => {
     changeDate(res)
   }
 
-  const checkcalendar = (item) => {
-    console.log("item", item)
-    if (marks.find(p => p.value == item.value)) {
-      setCalendarList([
-        { title: "出差", creator: "张三", remark: "去上海见一个客户", orderType: 0, startTime: "2020-12-11", endTime: "2020-12-15" },
-        { title: "病假", creator: "李四", remark: "发骚了", orderType: 1, startTime: "2020-12-11", endTime: "2020-12-11" },
-        { title: "出差", creator: "王武", remark: "去北京见一个客户", orderType: 0, startTime: "2020-12-22", endTime: "2020-12-30" },
-        { title: "产假", creator: "六六", remark: "媳妇五胎", orderType: 1, startTime: "2020-12-11", endTime: "2021-12-15" },
-        { title: "出差", creator: "张三", remark: "去上海见一个客户", orderType: 0, startTime: "2020-12-11", endTime: "2020-12-15" },
-        { title: "病假", creator: "李四", remark: "发骚了", orderType: 1, startTime: "2020-12-11", endTime: "2020-12-11" },
-        { title: "出差", creator: "王武", remark: "去北京见一个客户", orderType: 0, startTime: "2020-12-22", endTime: "2020-12-30" },
-        { title: "产假", creator: "六六", remark: "媳妇五胎", orderType: 1, startTime: "2020-12-11", endTime: "2021-12-15" },
-      ])
+
+  const getinfoList = (item) => {
+    let newday = item
+    let start = ""
+    let end = ""
+    if (dateType == "month") {
+      start = newday.format("YYYY-MM-01")
+      end = newday.format("YYYY-MM-" + `${newday.daysInMonth()}`)
+    } else if (dateType == "week") {
+      start = newday.day(0).format("YYYY-MM-DD")
+      end = newday.day(6).format("YYYY-MM-DD")
     } else {
-      setCalendarList([])
+      newday = dayjs()
+      start = newday.format("YYYY-MM-DD")
+      end = newday.format("YYYY-MM-DD")
     }
+    api.get(`nicai/ERP/CDM/Calendar/Rows/ByDate/${start}/${end}`, {}).then(res => {
+      if (res.statusCode == 200) {
+        let list = res.data
+        let outlist = []
+        for (let i of list["outs"]) {
+          outlist.push({ title: i.activityName, creator: i.directorName, remark: i.outDesc, orderType: "outs", startTime: i.outStartDateTime, endTime: i.outEndDateTime })
+        }
+        let leaveslist = []
+        for (let i of list["leaves"]) {
+          leaveslist.push({ title: i.leaveTypeName, creator: i.employeeName, remark: i.leaveDesc, orderType: "leaves", startTime: i.leaveStartDateTime, endTime: i.leaveEndDateTime })
+        }
+        let attendanceDailyslist = []
+        for (let i of list["attendanceDailys"]) {
+          if (i.abnormalTypeName != "正常")
+            attendanceDailyslist.push({
+              title: "考勤", creator: i.employeeName, remark: i.abnormalTypeName, orderType: "attendanceDailys", startTime: i.goToTime == "0001-01-01 00:00:00" ? "" : i.goToTime, endTime: i.goOffTime == "0001-01-01 00:00:00" ? "" : i.goOffTime
+            })
+        }
+
+        let reslist = [].concat(outlist, leaveslist, attendanceDailyslist)
+        if (dateType == "week") {
+          setList(reslist)
+          setCalendarList(reslist)
+        } else {
+          let todayList = []
+          for (let i of reslist) {
+            if (dayjs(i.startTime).date() <= newday.date() && dayjs(i.endTime).date() >= newday.date()) {
+              todayList.push(i)
+            }
+          }
+          setList(todayList)
+          setCalendarList(todayList)
+        }
+
+
+        let marklist = []
+        for (let i of list["marks"]) {
+          if (list["attendanceMarks"].findIndex(p => p == i) > -1) {
+            marklist.push({ value: dayjs(i).format("YYYY-MM-DD"), color: 'skyblue', markSize: '9px' })
+          } else if (list["leaveMarks"].findIndex(p => p == i) > -1) {
+            marklist.push({ value: dayjs(i).format("YYYY-MM-DD"), color: 'red', markSize: '9px' })
+          } else if (list["extraMarks"].findIndex(p => p == i) > -1) {
+            marklist.push({ value: dayjs(i).format("YYYY-MM-DD"), color: 'green', markSize: '9px' })
+          } else if (list["outMarks"].findIndex(p => p == i) > -1) {
+            marklist.push({ value: dayjs(i).format("YYYY-MM-DD"), color: 'yellow', markSize: '9px' })
+          }
+        }
+        setMarks(marklist)
+
+        //attendanceDailys 蓝色/灰色
+        //leaves 红色
+        //extra 绿色
+        //outs  黄色
+
+      }
+    })
   }
 
   return (
@@ -135,18 +194,22 @@ const Index: FunctionComponent = () => {
         dateType == "week" ? <Datetypeswiper currentDate={selectday} swipertype={dateType} getdateInfo={getdateInfo}></Datetypeswiper> : null
       }
       {
-        dateType == "day" ? <Datetypeswiper currentDate={selectday} swipertype={dateType} getdateInfo={getdateInfo}></Datetypeswiper> : null
+        dateType == "day" && null
       }
-
+      <View className="calendarTags">
+        {
+          activeList.map(p => <AtTag type='primary' active={isactive == p.value} onClick={() => setisactive(p.value)}>{p.title}</AtTag>)
+        }
+      </View>
       <View className={dateType == "week" || dateType == "day" ? "heighcalendarlist" : "calendarlist"}>
         {
           calendarList.map(p => <AtCard
-            extra={`申请人：${p.creator}`}
+            extra={p.orderType == "attendanceDailys" ? `员工：${p.creator}` : `申请人：${p.creator}`}
             title={p.title}
             thumb='http://www.logoquan.com/upload/list/20180421/logoquan15259400209.PNG'
           >
             <View>内容:{p.remark}</View>
-            <View>时间:{p.startTime}~{p.endTime}</View>
+            <View>时间:{p.startTime && p.endTime ? `${p.startTime}~${p.endTime}` : ""}</View>
           </AtCard>)
         }
       </View>
