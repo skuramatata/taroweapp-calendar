@@ -3,12 +3,13 @@ import Taro, { checkIsSupportFacialRecognition, FunctionComponent } from '@taroj
 import { View, Text, Button } from '@tarojs/components'
 import api from "../../services/api";
 import { AtMessage, AtButton } from "taro-ui"
+import './login.less'
 
 const login: FunctionComponent = () => {
   const [ismobile, setIsmobile] = useState(false)
 
   useEffect(() => {
-    login()
+    //login()
     return () => {
 
     }
@@ -99,10 +100,13 @@ const login: FunctionComponent = () => {
     }
   }
 
-  return (<View>
-    {
-      !ismobile ? <AtButton type="primary" openType="getPhoneNumber" onGetPhoneNumber={getPhoneNumber}>认证员工手机号</AtButton> : null
-    }
+  return (<View className="body">
+    <Text>首次访问小程序，请授权手机号</Text>
+    <View className="phonenumberbt">
+      {
+        !ismobile ? <AtButton type="primary" openType="getPhoneNumber" onGetPhoneNumber={getPhoneNumber}>点击授权</AtButton> : null
+      }
+    </View>
     <AtMessage />
   </View>)
 }

@@ -103,7 +103,7 @@ const Index: FunctionComponent = () => {
     } else if (dateType == "week") {
       start = newday.day(0).format("YYYY-MM-DD")
       end = newday.day(6).format("YYYY-MM-DD")
-    } else {
+    } else {å
       newday = dayjs()
       start = newday.format("YYYY-MM-DD")
       end = newday.format("YYYY-MM-DD")
