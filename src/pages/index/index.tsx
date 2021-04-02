@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import Taro, { checkIsSupportFacialRecognition, FunctionComponent } from '@tarojs/taro';
-import { AtTabs, AtCard, AtTag } from "taro-ui"
+import { AtTabs, AtCard, AtTag, AtDrawer, AtIcon, AtList, AtListItem, AtInput, AtForm, AtTextarea } from "taro-ui"
 import { View, Text } from '@tarojs/components'
 import Calendar from 'taro-calendar-customizable';
 import api from "../../services/api";
@@ -10,7 +10,7 @@ import dayjs from 'dayjs'
 var weekOfYear = require('dayjs/plugin/weekOfYear')
 dayjs.extend(weekOfYear)
 
-const activeList = [{ title: "全部", value: "all" }, { title: "请假", value: "leaves" }, { title: "出行", value: "outs" }, { title: "考勤", value: "attendanceDailys" }, { title: "加班", value: "extra" }]
+const activeList = [{ title: "全部", value: "all", color: "" }, { title: "请假", value: "leaves", color: "red" }, { title: "出行", value: "outs", color: "yellow" }, { title: "考勤", value: "attendanceDailys", color: "skyblue" }, { title: "加班", value: "extra", color: "green" }]
 const Index: FunctionComponent = () => {
   const [isShow, setIsShow] = useState(true)
   const [dateType, setDateType] = useState("month")
@@ -25,6 +25,8 @@ const Index: FunctionComponent = () => {
   const [calendarList, setCalendarList] = useState([])
   const [isactive, setisactive] = useState("all")
   const [list, setList] = useState([])
+  const [isdshow, setIsdshow] = useState(false)
+  const [info, setInfo] = useState({})
 
   useEffect(() => {
     setYear(dayjs().format("YYYY"))
@@ -103,7 +105,7 @@ const Index: FunctionComponent = () => {
     } else if (dateType == "week") {
       start = newday.day(0).format("YYYY-MM-DD")
       end = newday.day(6).format("YYYY-MM-DD")
-    } else {å
+    } else {
       newday = dayjs()
       start = newday.format("YYYY-MM-DD")
       end = newday.format("YYYY-MM-DD")
@@ -138,6 +140,7 @@ const Index: FunctionComponent = () => {
               todayList.push(i)
             }
           }
+          setisactive("all")
           setList(todayList)
           setCalendarList(todayList)
         }
@@ -164,6 +167,16 @@ const Index: FunctionComponent = () => {
 
       }
     })
+  }
+
+  const openDrawer = (item) => {
+    console.log("openDrawer", item)
+    setInfo(item)
+    setIsdshow(true)
+  }
+
+  const onclose = () => {
+    setIsdshow(false)
   }
 
   return (
@@ -197,9 +210,19 @@ const Index: FunctionComponent = () => {
         dateType == "day" && null
       }
       <View className="calendarTags">
-        {
-          activeList.map(p => <AtTag type='primary' active={isactive == p.value} onClick={() => setisactive(p.value)}>{p.title}</AtTag>)
-        }
+        <View className="taglist">
+          {
+            activeList.map(p => <AtTag type='primary' active={isactive == p.value} onClick={() => setisactive(p.value)}>
+              <View style={{ display: "flex", alignItems: "center" }}>
+                {p.title}
+                {
+                  p.color ? <View style={{ backgroundColor: p.color, width: "10px", height: "10px", marginLeft: "10px" }}>
+                  </View> : null
+                }
+              </View>
+            </AtTag>)
+          }
+        </View>
       </View>
       <View className={dateType == "week" || dateType == "day" ? "heighcalendarlist" : "calendarlist"}>
         {
@@ -207,12 +230,79 @@ const Index: FunctionComponent = () => {
             extra={p.orderType == "attendanceDailys" ? `员工：${p.creator}` : `申请人：${p.creator}`}
             title={p.title}
             thumb='http://www.logoquan.com/upload/list/20180421/logoquan15259400209.PNG'
+            onClick={() => openDrawer(p)}
           >
             <View>内容:{p.remark}</View>
             <View>时间:{p.startTime && p.endTime ? `${p.startTime}~${p.endTime}` : ""}</View>
           </AtCard>)
         }
       </View>
+      <View className="drawerInfo">
+        {
+          isdshow ? <AtDrawer
+            show={isdshow}
+            onClose={onclose}
+            width={"80%"}
+            right
+            mask
+          >
+            <View style={{ border: "1px solid red", color: "black", height: "100%" }}>
+              <View className="header">
+                类型：{activeList.filter(p => p.value == info.orderType)[0].title}
+                <View style={{ backgroundColor: activeList.filter(p => p.value == info.orderType)[0].color, width: "10px", height: "10px", marginLeft: "10px" }}>
+                </View>
+              </View>
+              <View className="content">
+                <AtForm>
+                  <AtInput
+                    name='value1'
+                    title='主题'
+                    type='text'
+                    disabled
+                    value={info.title}
+                  />
+                  <AtInput
+                    name='value2'
+                    title='开始时间'
+                    type='number'
+                    disabled
+                    value={info.startTime}
+                  />
+                  <AtInput
+                    name='value2'
+                    title='结束时间'
+                    type='number'
+                    disabled
+                    value={info.endTime}
+                  />
+                  <AtInput
+                    name='value2'
+                    title='发起人'
+                    type='number'
+                    disabled
+                    value={info.creator}
+                  />
+                  <AtInput
+                    name='value2'
+                    title='备注'
+                    type='number'
+                    disabled
+                    value=""
+                  />
+                  <AtTextarea
+                    disabled
+                    count={false}
+                    value={info.remark}
+                    maxLength={200}
+                  />
+                </AtForm>
+              </View>
+            </View>
+          </AtDrawer>
+            : null
+        }
+      </View>
+
     </View>
   )
 }

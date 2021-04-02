@@ -9,7 +9,7 @@ const login: FunctionComponent = () => {
   const [ismobile, setIsmobile] = useState(false)
 
   useEffect(() => {
-    //login()
+    login()
     return () => {
 
     }
@@ -30,6 +30,11 @@ const login: FunctionComponent = () => {
           Taro.setStorageSync("token", data.token)
           Taro.setStorageSync("mobile", data.userInfo.mobile)
           Taro.redirectTo({ url: "/pages/index/index" })
+        } else {
+          Taro.atMessage({
+            'message': '非法用户',
+            'type': "error",
+          })
         }
       } else {
         Taro.atMessage({
@@ -101,10 +106,10 @@ const login: FunctionComponent = () => {
   }
 
   return (<View className="body">
-    <Text>首次访问小程序，请授权手机号</Text>
+    {/* <Text>首次访问小程序，请授权手机号</Text> */}
     <View className="phonenumberbt">
       {
-        !ismobile ? <AtButton type="primary" openType="getPhoneNumber" onGetPhoneNumber={getPhoneNumber}>点击授权</AtButton> : null
+        !ismobile ? <AtButton type="primary" openType="getPhoneNumber" onGetPhoneNumber={getPhoneNumber}>点击授权员工手机号</AtButton> : null
       }
     </View>
     <AtMessage />

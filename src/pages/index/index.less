@@ -36,7 +36,8 @@
 .calendar-head>view {
   color: #292847;
 }
-.calendar-date{
+
+.calendar-date {
   height: 48px;
 }
 
@@ -77,40 +78,59 @@
   font-weight: 500;
 }
 
-.calendarlist{
+.calendarlist {
   margin-top: 20px;
   height: 30%;
   overflow-y: auto;
-  .at-card{
+
+  .at-card {
     margin-bottom: 20px;
   }
 }
 
-.heighcalendarlist{
+.heighcalendarlist {
   margin-top: 20px;
   height: 70%;
   overflow-y: auto;
-  .at-card{
+
+  .at-card {
     margin-bottom: 20px;
   }
 }
 
-.not-this-month .calendar-date{
+.not-this-month .calendar-date {
   color: #aaaaaa !important;
 }
 
-.calendar-page > view{
+.calendar-page>view {
   height: 7rem;
 }
 
-.calendarTags{
+.calendarTags {
   margin-top: 20px;
   padding: 0 24px;
   display: flex;
-  justify-content: space-around;
-  // .at-tag{
-  //   margin-right: 10px;
-  // }
+  overflow-x: auto;
+
+  .taglist {
+    white-space: nowrap;
+  }
+
+  .at-tag {
+    margin-right: 20px;
+  }
 }
 
+.drawerInfo {
+  .header {
+    padding: 10px;
+    font-weight: bold;
+    border: 1px solid #d0e0ed;
+    display: flex;
+    align-items: center;
+  }
 
+  .content {
+    padding: 10px;
+  }
+}
