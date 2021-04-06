@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import Taro, { checkIsSupportFacialRecognition, FunctionComponent } from '@tarojs/taro';
+import Taro, { getCurrentInstance, FunctionComponent } from '@tarojs/taro';
 import { AtTabs, AtCard, AtTag, AtDrawer, AtIcon, AtList, AtListItem, AtInput, AtForm, AtTextarea } from "taro-ui"
 import { View, Text } from '@tarojs/components'
 import Calendar from 'taro-calendar-customizable';
 import api from "../../services/api";
 import './index.less'
 import Datetypeswiper from '../../components/datetypeswiper'
+import TypeInfo from '../../components/info'
 import dayjs from 'dayjs'
 var weekOfYear = require('dayjs/plugin/weekOfYear')
 dayjs.extend(weekOfYear)
 
-const activeList = [{ title: "全部", value: "all", color: "" }, { title: "请假", value: "leaves", color: "red" }, { title: "出行", value: "outs", color: "yellow" }, { title: "考勤", value: "attendanceDailys", color: "skyblue" }, { title: "加班", value: "extra", color: "green" }]
-const Index: FunctionComponent = () => {
+const activeList = [{ title: "全部", value: "all", color: "" }, { title: "请假", value: "leaves", color: "red" }, { title: "外出", value: "outs", color: "yellow" }, { title: "考勤", value: "attendanceDailys", color: "skyblue" }, { title: "加班", value: "extra", color: "green" }]
+const Index: FunctionComponent = (props) => {
   const [isShow, setIsShow] = useState(true)
   const [dateType, setDateType] = useState("month")
   const [year, setYear] = useState("")
@@ -96,6 +97,10 @@ const Index: FunctionComponent = () => {
 
 
   const getinfoList = (item) => {
+    const { isuser } = getCurrentInstance().router.params
+    if (!isuser) {
+      return
+    }
     let newday = item
     let start = ""
     let end = ""
@@ -110,22 +115,23 @@ const Index: FunctionComponent = () => {
       start = newday.format("YYYY-MM-DD")
       end = newday.format("YYYY-MM-DD")
     }
-    api.get(`nicai/ERP/CDM/Calendar/Rows/ByDate/${start}/${end}`, {}).then(res => {
+    let userid = Taro.getStorageSync("userId")
+    api.get(`nicai/ERP/CDM/Calendar/Rows/ByDateWithUser/${userid}/${start}/${end}`, {}).then(res => {
       if (res.statusCode == 200) {
         let list = res.data
         let outlist = []
         for (let i of list["outs"]) {
-          outlist.push({ title: i.activityName, creator: i.directorName, remark: i.outDesc, orderType: "outs", startTime: i.outStartDateTime, endTime: i.outEndDateTime })
+          outlist.push({ title: i.activityName, creator: i.directorName, remark: i.outDesc, orderType: "outs", startTime: i.outStartDateTime, endTime: i.outEndDateTime, ...i })
         }
         let leaveslist = []
         for (let i of list["leaves"]) {
-          leaveslist.push({ title: i.leaveTypeName, creator: i.employeeName, remark: i.leaveDesc, orderType: "leaves", startTime: i.leaveStartDateTime, endTime: i.leaveEndDateTime })
+          leaveslist.push({ title: i.leaveTypeName, creator: i.employeeName, remark: i.leaveDesc, orderType: "leaves", startTime: i.leaveStartDateTime, endTime: i.leaveEndDateTime, ...i })
         }
         let attendanceDailyslist = []
         for (let i of list["attendanceDailys"]) {
           if (i.abnormalTypeName != "正常")
             attendanceDailyslist.push({
-              title: "考勤", creator: i.employeeName, remark: i.abnormalTypeName, orderType: "attendanceDailys", startTime: i.goToTime == "0001-01-01 00:00:00" ? "" : i.goToTime, endTime: i.goOffTime == "0001-01-01 00:00:00" ? "" : i.goOffTime
+              title: "考勤", creator: i.employeeName, remark: i.abnormalTypeName, orderType: "attendanceDailys", startTime: i.goToTime == "0001-01-01 00:00:00" ? "" : i.goToTime, endTime: i.goOffTime == "0001-01-01 00:00:00" ? "" : i.goOffTime, ...i
             })
         }
 
@@ -170,7 +176,6 @@ const Index: FunctionComponent = () => {
   }
 
   const openDrawer = (item) => {
-    console.log("openDrawer", item)
     setInfo(item)
     setIsdshow(true)
   }
@@ -246,58 +251,7 @@ const Index: FunctionComponent = () => {
             right
             mask
           >
-            <View style={{ border: "1px solid red", color: "black", height: "100%" }}>
-              <View className="header">
-                类型：{activeList.filter(p => p.value == info.orderType)[0].title}
-                <View style={{ backgroundColor: activeList.filter(p => p.value == info.orderType)[0].color, width: "10px", height: "10px", marginLeft: "10px" }}>
-                </View>
-              </View>
-              <View className="content">
-                <AtForm>
-                  <AtInput
-                    name='value1'
-                    title='主题'
-                    type='text'
-                    disabled
-                    value={info.title}
-                  />
-                  <AtInput
-                    name='value2'
-                    title='开始时间'
-                    type='number'
-                    disabled
-                    value={info.startTime}
-                  />
-                  <AtInput
-                    name='value2'
-                    title='结束时间'
-                    type='number'
-                    disabled
-                    value={info.endTime}
-                  />
-                  <AtInput
-                    name='value2'
-                    title='发起人'
-                    type='number'
-                    disabled
-                    value={info.creator}
-                  />
-                  <AtInput
-                    name='value2'
-                    title='备注'
-                    type='number'
-                    disabled
-                    value=""
-                  />
-                  <AtTextarea
-                    disabled
-                    count={false}
-                    value={info.remark}
-                    maxLength={200}
-                  />
-                </AtForm>
-              </View>
-            </View>
+            <TypeInfo typeinfo={activeList.filter(p => p.value == info.orderType)[0]} info={info}></TypeInfo>
           </AtDrawer>
             : null
         }
@@ -308,3 +262,4 @@ const Index: FunctionComponent = () => {
 }
 
 export default Index
+

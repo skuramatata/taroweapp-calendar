@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import Taro, { checkIsSupportFacialRecognition, FunctionComponent } from '@tarojs/taro';
+import Taro, { checkIsSupportFacialRecognition, FunctionComponent, setStorageSync } from '@tarojs/taro';
 import { View, Text, Button } from '@tarojs/components'
 import api from "../../services/api";
 import { AtMessage, AtButton } from "taro-ui"
@@ -27,10 +27,12 @@ const login: FunctionComponent = () => {
       if (res.statusCode == 200) {
         let data = res.data
         if (data.result) {
+          Taro.setStorageSync("userId", data.userInfo.userId)
           Taro.setStorageSync("token", data.token)
           Taro.setStorageSync("mobile", data.userInfo.mobile)
-          Taro.redirectTo({ url: "/pages/index/index" })
+          Taro.redirectTo({ url: "/pages/index/index?isuser=true" })
         } else {
+          Taro.redirectTo({ url: "/pages/index/index?isuser=false" })
           Taro.atMessage({
             'message': '非法用户',
             'type': "error",
@@ -53,8 +55,9 @@ const login: FunctionComponent = () => {
         let data = res.data
         if (data.result) {
           Taro.setStorageSync("token", data.token)
-          Taro.redirectTo({ url: "/pages/index/index" })
+          Taro.redirectTo({ url: "/pages/index/index?isuser=true" })
         } else {
+          Taro.redirectTo({ url: "/pages/index/index?isuser=false" })
           Taro.atMessage({
             'message': '非法用户',
             'type': "error",
@@ -106,10 +109,12 @@ const login: FunctionComponent = () => {
   }
 
   return (<View className="body">
-    {/* <Text>首次访问小程序，请授权手机号</Text> */}
+    <View className="desc">
+      <Text>小程序仅限上海佰灏铂恒品牌策划有限公司内部员工使用，并承诺不会将用户相关信息挪作他用。小程序只允许已经在公司内部管理系统中注册成功的手机用户查询使用，其他人员将无法查看到数据。授权同意将视作您正式开通了移动端查看系统的权限。</Text>
+    </View>
     <View className="phonenumberbt">
       {
-        !ismobile ? <AtButton type="primary" openType="getPhoneNumber" onGetPhoneNumber={getPhoneNumber}>点击授权员工手机号</AtButton> : null
+        !ismobile ? <AtButton type="primary" openType="getPhoneNumber" onGetPhoneNumber={getPhoneNumber}>同意授权</AtButton> : null
       }
     </View>
     <AtMessage />
