@@ -29,6 +29,7 @@ const Index: FunctionComponent = (props) => {
   const [isdshow, setIsdshow] = useState(false)
   const [info, setInfo] = useState({})
 
+
   useEffect(() => {
     setYear(dayjs().format("YYYY"))
     setMonth(`${dayjs().month() + 1}`)
@@ -97,10 +98,6 @@ const Index: FunctionComponent = (props) => {
 
 
   const getinfoList = (item) => {
-    const { isuser } = getCurrentInstance().router.params
-    if (!isuser) {
-      return
-    }
     let newday = item
     let start = ""
     let end = ""
@@ -116,7 +113,8 @@ const Index: FunctionComponent = (props) => {
       end = newday.format("YYYY-MM-DD")
     }
     let userid = Taro.getStorageSync("userId")
-    api.get(`nicai/ERP/CDM/Calendar/Rows/ByDateWithUser/${userid}/${start}/${end}`, {}).then(res => {
+    console.log("aaaa", userid)
+    api.get(`https://bbhcwx.ltd/ERP/CDM/Calendar/Rows/ByDateWithUser/${userid}/${start}/${end}`, {}).then(res => {
       if (res.statusCode == 200) {
         let list = res.data
         let outlist = []

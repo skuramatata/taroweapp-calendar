@@ -10,9 +10,7 @@ const login: FunctionComponent = () => {
 
   useEffect(() => {
     login()
-    return () => {
-
-    }
+    return () => { }
   }, [])
 
   const getPhoneNumber = (item) => {
@@ -23,21 +21,22 @@ const login: FunctionComponent = () => {
     const { encryptedData, iv } = item
     const openid = Taro.getStorageSync("openid")
     const sessionKey = Taro.getStorageSync("sessionKey")
-    api.get(`nicai/WeChat/Auth/BindMobile`, { encryptedData, iv, openid, sessionKey }).then(res => {
+    api.get(`https://bbhcwx.ltd/WeChat/Auth/BindMobile`, { encryptedData, iv, openid, sessionKey }).then(res => {
       if (res.statusCode == 200) {
         let data = res.data
         if (data.result) {
           Taro.setStorageSync("userId", data.userInfo.userId)
           Taro.setStorageSync("token", data.token)
           Taro.setStorageSync("mobile", data.userInfo.mobile)
-          Taro.redirectTo({ url: "/pages/index/index?isuser=true" })
-        } else {
-          Taro.redirectTo({ url: "/pages/index/index?isuser=false" })
-          Taro.atMessage({
-            'message': '非法用户',
-            'type': "error",
-          })
+          Taro.switchTab({ url: "/pages/index/index" })
         }
+        // else {
+        //   Taro.switchTab({ url: "/pages/index/index" })
+        //   Taro.atMessage({
+        //     'message': '非法用户',
+        //     'type': "error",
+        //   })
+        // }
       } else {
         Taro.atMessage({
           'message': '非法用户',
@@ -50,14 +49,14 @@ const login: FunctionComponent = () => {
   const checkToken = () => {
     let openId = Taro.getStorageSync('openid')
     let mobile = Taro.getStorageSync("mobile")
-    api.get(`nicai/WeChat/Auth/GetToken`, { openId, mobile }).then(res => {
+    api.get(`https://bbhcwx.ltd/WeChat/Auth/GetToken`, { openId, mobile }).then(res => {
       if (res.statusCode == 200) {
         let data = res.data
         if (data.result) {
           Taro.setStorageSync("token", data.token)
-          Taro.redirectTo({ url: "/pages/index/index?isuser=true" })
+          Taro.switchTab({ url: "/pages/index/index?isuser=true" })
         } else {
-          Taro.redirectTo({ url: "/pages/index/index?isuser=false" })
+          Taro.switchTab({ url: "/pages/index/index?isuser=false" })
           Taro.atMessage({
             'message': '非法用户',
             'type': "error",
@@ -86,7 +85,7 @@ const login: FunctionComponent = () => {
           let code = res.code
           if (res.code) {
             //发起网络请求
-            api.get('nicai/WeChat/Auth/Code2Session?jsCode=' + code).then(res => {
+            api.get('https://bbhcwx.ltd/WeChat/Auth/Code2Session?jsCode=' + code).then(res => {
               if (res.statusCode == 200) {
                 Taro.setStorageSync("openid", res.data.openid)
                 Taro.setStorageSync("sessionKey", res.data.session_key)
